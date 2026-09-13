@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CraftLegends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand">⛏️ CraftLegends</a>
+  <div class="nav-links">
+    <a href="#server">Server</a>
+    <a href="mitglieder.html">Mitglieder</a>
+    <a href="#" id="admin-login-link">🔑 Admin-Login</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1 id="site-title">CRAFTLEGENDS</h1>
+  <p class="lead" id="site-description">Lädt…</p>
+</div>
+
+<section id="server">
+  <h2>🗺️ Unsere Server</h2>
+  <div class="server-grid" id="server-grid">Lädt…</div>
+</section>
+
+<section>
+  <h2>👥 Community</h2>
+  <a class="server-card" href="mitglieder.html" style="max-width:320px;">
+    <h3>Mitglieder ansehen</h3>
+    <p>Alle Spieler, Rollen &amp; Teams von CraftLegends.</p>
+  </a>
+</section>
+
+<footer>CraftLegends</footer>
+
+<script>
+fetch('data-site.json').then(r => r.json()).then(site => {
+  document.getElementById('site-title').textContent = site.title.toUpperCase();
+  document.getElementById('site-description').textContent = site.description;
+});
+
+fetch('data-servers.json').then(r => r.json()).then(servers => {
+  servers.sort((a, b) => a.number - b.number);
+  const grid = document.getElementById('server-grid');
+  grid.innerHTML = servers.map(s => `
+    <a class="server-card" href="server.html?id=${encodeURIComponent(s.id)}">
+      ${s.logo ? `<img src="${s.logo}" alt="${s.name} Logo" style="width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:8px; margin-bottom:12px;">` : ''}
+      <span class="tag">${s.status === 'live' ? 'AKTUELL' : 'ARCHIV'}</span>
+      <h3 style="color: ${s.color || 'var(--text)'};">${s.name}</h3>
+      <p>${s.description ? s.description.slice(0, 90) + (s.description.length > 90 ? '…' : '') : ''}</p>
+    </a>
+  `).join('');
+});
+</script>
+
+<script>
+// Netlify Identity: Login-Button + zuverlässige Erkennung von Einladungs-/Reset-/Bestätigungs-Links
+document.getElementById('admin-login-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (window.netlifyIdentity) netlifyIdentity.open();
+});
+
+if (window.netlifyIdentity) {
+  netlifyIdentity.on('init', user => {
+    const hash = window.location.hash;
+    if (hash.includes('invite_token') || hash.includes('recovery_token') || hash.includes('confirmation_token')) {
+      // Erzwingt das Öffnen des Widgets, statt darauf zu vertrauen, dass es automatisch passiert.
+      netlifyIdentity.open(hash.includes('recovery_token') ? 'login' : 'signup');
+    }
+  });
+  netlifyIdentity.on('login', () => {
+    window.location.href = '/admin/';
+  });
+}
+</script>
+
+</body>
+</html>
