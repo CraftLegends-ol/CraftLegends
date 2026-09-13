@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mitglieder — CraftLegends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <div class="nav-links">
+    <a href="index.html#server">Server</a>
+    <a href="mitglieder.html" class="active">Mitglieder</a>
+    <a href="regeln.html">Regeln</a>
+    <a href="ankuendigungen.html">Ankündigungen</a>
+  </div>
+</nav>
+
+<div class="hero hero-small">
+  <h1>MITGLIEDER</h1>
+  <p class="lead">Alle Spieler von CraftLegends auf einen Blick — mit Rolle und Team-Zugehörigkeit.</p>
+</div>
+
+<section id="members-sections">Lädt…</section>
+
+<footer>CraftLegends</footer>
+
+<script>
+function headImg(m) {
+  return `<img class="member-head" src="https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96" alt="${m.name}" loading="lazy"
+    onerror="this.onerror=function(){this.src='https://crafatar.com/avatars/${m.uuid}?size=96&overlay'}; this.src='https://minotar.net/avatar/${encodeURIComponent(m.name)}/96'">`;
+}
+
+function memberCard(m, data) {
+  const roleCls = m.role === 'Admin' ? 'role-admin' : m.role === 'Developer' ? 'role-dev' : m.role === 'Operator' ? 'role-op' : 'role-member';
+  const team = data.teams[m.team];
+  const teamBadge = team
+    ? `<span class="team-badge" style="color:${team.color}; background:${team.bg || team.color + '22'}; border-color:${team.color}55">${team.label}</span>`
+    : `<span class="team-badge team-none">MBR</span>`;
+  return `
+    <div class="member-card">
+      ${headImg(m)}
+      <div class="member-name">${m.name}</div>
+      <div class="member-badges">
+        <span class="role-badge ${roleCls}">${m.role}</span>
+        ${teamBadge}
+      </div>
+    </div>`;
+}
+
+fetch('data-members.json').then(r => r.json()).then(data => {
+  const admins = data.members.filter(m => m.role === 'Admin');
+  const devs = data.members.filter(m => m.role === 'Developer');
+  const rest = data.members.filter(m => m.role !== 'Admin' && m.role !== 'Developer');
+
+  const teamOrder = Object.keys(data.teams);
+  const restByTeam = teamOrder.map(tid => ({
+    team: data.teams[tid],
+    members: rest.filter(m => m.team === tid)
+  })).filter(g => g.members.length);
+  const noTeam = rest.filter(m => !m.team || !data.teams[m.team]);
+
+  let html = '';
+  if (admins.length) {
+    html += `<div class="member-group"><h2>👑 Admins</h2><div class="members-grid">${admins.map(m => memberCard(m, data)).join('')}</div></div>`;
+  }
+  if (devs.length) {
+    html += `<div class="member-group"><h2>🛠️ Developer</h2><div class="members-grid">${devs.map(m => memberCard(m, data)).join('')}</div></div>`;
+  }
+  if (rest.length) {
+    html += `<div class="member-group"><h2>👥 Member</h2>`;
+    restByTeam.forEach(g => {
+      html += `<h3 class="team-subheading" style="color:${g.team.color === '#1a1a1a' ? 'var(--text)' : g.team.color}">${g.team.label} Team</h3><div class="members-grid">${g.members.map(m => memberCard(m, data)).join('')}</div>`;
+    });
+    if (noTeam.length) {
+      html += `<h3 class="team-subheading">Ohne Team</h3><div class="members-grid">${noTeam.map(m => memberCard(m, data)).join('')}</div>`;
+    }
+    html += `</div>`;
+  }
+
+  document.getElementById('members-sections').innerHTML = html;
+});
+</script>
+</body>
+</html>

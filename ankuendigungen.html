@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ankündigungen — CraftLegends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <div class="nav-links">
+    <a href="index.html#server">Server</a>
+    <a href="mitglieder.html">Mitglieder</a>
+    <a href="regeln.html">Regeln</a>
+    <a href="ankuendigungen.html" class="active">Ankündigungen</a>
+  </div>
+</nav>
+
+<div class="hero hero-small">
+  <h1 id="ank-title">ANKÜNDIGUNGEN</h1>
+</div>
+
+<section>
+  <div id="ank-list">Lädt…</div>
+</section>
+
+<footer>CraftLegends</footer>
+
+<script>
+fetch('data-ankuendigungen.json').then(r => r.json()).then(data => {
+  document.getElementById('ank-title').textContent = data.title.toUpperCase();
+  const list = (data.announcements || []).slice().sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  document.getElementById('ank-list').innerHTML = list.map(a => `
+    <div class="announcement-card">
+      <div class="announcement-date">${a.date || ''}</div>
+      <h3>${a.title || ''}</h3>
+      <p>${a.text || ''}</p>
+    </div>
+  `).join('') || '<p class="lead">Noch keine Ankündigungen.</p>';
+});
+</script>
+</body>
+</html>
