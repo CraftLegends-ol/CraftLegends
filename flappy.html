@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird — CraftLegends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  .game-wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px 40px; }
+  .game-shell {
+    background: var(--card); border: 1px solid var(--card-border); border-radius: 14px;
+    padding: 18px; display: inline-block; max-width: 100%;
+  }
+  #game { display: block; border-radius: 8px; image-rendering: pixelated; background: #7ec0ee; max-width: 100%; height: auto; touch-action: manipulation; cursor: pointer; }
+  .game-bar { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+  .score-box { font-family: var(--font-mono); font-size: 15px; }
+  .score-box b { color: var(--emerald); font-size: 20px; }
+  .score-box .best { color: var(--gold); }
+  .hint { color: var(--text-dim); font-size: 13px; margin-top: 12px; }
+</style>
+</head>
+<body>
+<nav class="nav">
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <div class="nav-links">
+    <a href="index.html#server">Server</a>
+    <a href="mitglieder.html">Mitglieder</a>
+    <a href="regeln.html">Regeln</a>
+    <a href="ankuendigungen.html">Ankündigungen</a>
+    <a href="flappy.html" class="active">Flappy Bird</a>
+  </div>
+</nav>
+
+<div class="hero hero-small">
+  <h1>FLAPPY BIRD</h1>
+  <p class="lead">Minecraft-Edition: Flieg als Papagei durch die Lücken zwischen den Rohren. Leertaste, Klick oder Tippen zum Flattern.</p>
+</div>
+
+<div class="game-wrap">
+  <div class="game-shell">
+    <div class="game-bar">
+      <div class="score-box">Punkte: <b id="score">0</b></div>
+      <div class="score-box best">Rekord: <span id="best">0</span></div>
+    </div>
+    <canvas id="game" width="420" height="560"></canvas>
+    <p class="hint">Der Rekord gilt nur für diese Sitzung im Browser.</p>
+  </div>
+</div>
+
+<footer>CraftLegends</footer>
+
+<script>
+const cv = document.getElementById('game');
+const ctx = cv.getContext('2d');
+const W = cv.width, H = cv.height;
+const GROUND = 60;
+
+let best = 0;
+let bird, pipes, score, state, frame;
+
+function reset() {
+  bird = { x: 96, y: H / 2 - 40, vy: 0, size: 26 };
+  pipes = [];
+  score = 0;
+  frame = 0;
+  state = 'ready';
+  document.getElementById('score').textContent = '0';
+}
+
+const GRAV = 0.42, FLAP = -7.4, SPEED = 2.3, GAP = 150, PIPE_W = 62, SPACING = 200;
+
+function flap() {
+  if (state === 'ready') { state = 'play'; bird.vy = FLAP; }
+  else if (state === 'play') bird.vy = FLAP;
+  else if (state === 'dead') reset();
+}
+
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' || e.code === 'ArrowUp') { e.preventDefault(); flap(); }
+});
+cv.addEventListener('mousedown', e => { e.preventDefault(); flap(); });
+cv.addEventListener('touchstart', e => { e.preventDefault(); flap(); }, { passive: false });
+
+// --- Zeichen-Helfer im Pixel-Stil ---
+function px(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x | 0, y | 0, w | 0, h | 0); }
+
+function drawBird() {
+  const { x, y, size: s } = bird;
+  const u = s / 8;
+  const tilt = Math.max(-0.5, Math.min(0.9, bird.vy / 12));
+  ctx.save();
+  ctx.translate(x + s / 2, y + s / 2);
+  ctx.rotate(tilt);
+  ctx.translate(-s / 2, -s / 2);
+  // Körper (Papagei, rot)
+  px(u, u * 2, u * 6, u * 5, '#d63b2f');
+  px(u * 2, u, u * 4, u, '#d63b2f');
+  // Flügel (flattert)
+  const wing = (state === 'play' && Math.floor(frame / 6) % 2 === 0) ? u : u * 2.5;
+  px(0, u * 2 + wing * 0.3, u * 2, u * 2.2, '#2f8fd6');
+  // Schwanz
+  px(u * 6.5, u * 3, u * 1.6, u * 1.6, '#f0c53b');
+  // Schnabel
+  px(u * 6.2, u * 2.6, u * 2, u * 1.4, '#f0c53b');
+  // Auge
+  px(u * 4.4, u * 2.2, u * 1.2, u * 1.2, '#1a1a1a');
+  ctx.restore();
+}
+
+function drawPipe(p) {
+  const topH = p.gapY - GAP / 2;
+  const botY = p.gapY + GAP / 2;
+  const botH = H - GROUND - botY;
+  // Rohre als Minecraft-Grasblock-Säulen
+  for (const [yy, hh] of [[0, topH], [botY, botH]]) {
+    if (hh <= 0) continue;
+    px(p.x, yy, PIPE_W, hh, '#5a8f3c');
+    px(p.x, yy, 6, hh, '#6ea84a');
+    px(p.x + PIPE_W - 6, yy, 6, hh, '#47702f');
+    // Pixel-Textur
+    ctx.fillStyle = 'rgba(0,0,0,0.10)';
+    for (let i = 0; i < hh; i += 16) {
+      ctx.fillRect(p.x + 6, yy + i, PIPE_W - 12, 2);
+    }
+  }
+  // Rohr-Enden (Stein)
+  px(p.x - 5, topH - 22, PIPE_W + 10, 22, '#7d7d7d');
+  px(p.x - 5, topH - 22, PIPE_W + 10, 5, '#9a9a9a');
+  px(p.x - 5, botY, PIPE_W + 10, 22, '#7d7d7d');
+  px(p.x - 5, botY, PIPE_W + 10, 5, '#9a9a9a');
+}
+
+function drawBackground() {
+  // Himmel
+  const g = ctx.createLinearGradient(0, 0, 0, H - GROUND);
+  g.addColorStop(0, '#6ab7f0');
+  g.addColorStop(1, '#a8d8f5');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H - GROUND);
+  // Pixelwolken
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
+  for (let i = 0; i < 3; i++) {
+    const cx = ((i * 190) - (frame * 0.25) % (W + 180) + W + 180) % (W + 180) - 90;
+    const cy = 60 + i * 74;
+    ctx.fillRect(cx, cy, 54, 14);
+    ctx.fillRect(cx + 14, cy - 12, 34, 14);
+  }
+  // Boden (Grasblock)
+  px(0, H - GROUND, W, GROUND, '#8b6239');
+  px(0, H - GROUND, W, 12, '#5a8f3c');
+  px(0, H - GROUND, W, 4, '#6ea84a');
+  ctx.fillStyle = 'rgba(0,0,0,0.12)';
+  for (let i = 0; i < W; i += 20) ctx.fillRect(i, H - GROUND + 14, 2, GROUND - 14);
+}
+
+function drawOverlay(lines, sub) {
+  ctx.fillStyle = 'rgba(0,0,0,0.55)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#eef1e6';
+  ctx.font = "16px 'Press Start 2P', monospace";
+  lines.forEach((t, i) => ctx.fillText(t, W / 2, H / 2 - 30 + i * 34));
+  if (sub) {
+    ctx.font = "10px 'Press Start 2P', monospace";
+    ctx.fillStyle = '#c6cfba';
+    ctx.fillText(sub, W / 2, H / 2 + 60);
+  }
+}
+
+function update() {
+  frame++;
+  if (state === 'play') {
+    bird.vy += GRAV;
+    bird.y += bird.vy;
+
+    if (frame % Math.round(SPACING / SPEED) === 0 || pipes.length === 0) {
+      const margin = 90;
+      const gapY = margin + GAP / 2 + Math.random() * (H - GROUND - GAP - margin * 2);
+      pipes.push({ x: W, gapY, passed: false });
+    }
+
+    for (const p of pipes) {
+      p.x -= SPEED;
+      if (!p.passed && p.x + PIPE_W < bird.x) {
+        p.passed = true;
+        score++;
+        document.getElementById('score').textContent = score;
+      }
+    }
+    pipes = pipes.filter(p => p.x + PIPE_W > -20);
+
+    // Kollisionen
+    const bx = bird.x + 3, by = bird.y + 3, bs = bird.size - 6;
+    if (bird.y + bird.size >= H - GROUND || bird.y <= 0) die();
+    for (const p of pipes) {
+      if (bx + bs > p.x && bx < p.x + PIPE_W) {
+        if (by < p.gapY - GAP / 2 || by + bs > p.gapY + GAP / 2) die();
+      }
+    }
+  } else if (state === 'ready') {
+    bird.y = H / 2 - 40 + Math.sin(frame / 18) * 7;
+  } else if (state === 'dead') {
+    if (bird.y + bird.size < H - GROUND) { bird.vy += GRAV; bird.y += bird.vy; }
+  }
+}
+
+function die() {
+  if (state !== 'play') return;
+  state = 'dead';
+  bird.vy = -3;
+  if (score > best) {
+    best = score;
+    document.getElementById('best').textContent = best;
+  }
+}
+
+function draw() {
+  drawBackground();
+  pipes.forEach(drawPipe);
+  drawBird();
+
+  // Punkte im Spiel
+  if (state === 'play') {
+    ctx.textAlign = 'center';
+    ctx.fillStyle = 'rgba(0,0,0,0.35)';
+    ctx.font = "22px 'Press Start 2P', monospace";
+    ctx.fillText(score, W / 2 + 2, 62);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillText(score, W / 2, 60);
+  }
+
+  if (state === 'ready') drawOverlay(['BEREIT?'], 'Leertaste / Klick zum Starten');
+  if (state === 'dead') drawOverlay(['GAME OVER', String(score) + ' Punkte'], 'Klick für neue Runde');
+}
+
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+reset();
+loop();
+</script>
+</body>
+</html>
