@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CraftLegends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+<nav class="nav">
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <div class="nav-links">
+    <a href="#server">Server</a>
+    <a href="mitglieder.html">Mitglieder</a>
+    <a href="regeln.html">Regeln</a>
+    <a href="ankuendigungen.html">Ankündigungen</a>
+    <a href="flappy.html">Flappy Bird</a>
+    <a href="#" id="admin-login-link">🔑 Admin-Login</a>
+  </div>
+</nav>
+
+<div class="hero">
+  <img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="width:120px; height:120px; margin-bottom:24px;">
+  <h1 id="site-title">CRAFTLEGENDS</h1>
+  <p class="lead" id="site-description">Lädt…</p>
+</div>
+
+<section id="server">
+  <h2>🗺️ Unsere Server</h2>
+  <div class="server-grid" id="server-grid">Lädt…</div>
+</section>
+
+<section>
+  <h2>👥 Community</h2>
+  <div class="server-grid">
+    <a class="server-card" href="mitglieder.html">
+      <h3>Mitglieder ansehen</h3>
+      <p>Alle Spieler, Rollen &amp; Teams von CraftLegends.</p>
+    </a>
+    <a class="server-card" href="regeln.html">
+      <h3>Regeln</h3>
+      <p>Was auf unseren Servern gilt.</p>
+    </a>
+    <a class="server-card" href="ankuendigungen.html">
+      <h3>Ankündigungen</h3>
+      <p>Neuigkeiten rund um CraftLegends.</p>
+    </a>
+    <a class="server-card" href="flappy.html">
+      <h3>🐦 Flappy Bird</h3>
+      <p>Minecraft-Edition — flieg durch die Lücken und knack den Rekord.</p>
+    </a>
+  </div>
+</section>
+
+<footer>CraftLegends</footer>
+
+<script>
+fetch('data-site.json').then(r => r.json()).then(site => {
+  document.getElementById('site-title').textContent = site.title.toUpperCase();
+  document.getElementById('site-description').textContent = site.description;
+});
+
+fetch('data-servers.json').then(r => r.json()).then(data => {
+  const servers = data.servers || data;
+  servers.sort((a, b) => a.number - b.number);
+  const grid = document.getElementById('server-grid');
+  grid.innerHTML = servers.map(s => `
+    <a class="server-card" href="server.html?id=${encodeURIComponent(s.id)}">
+      ${s.logo ? `<img src="${s.logo}" alt="${s.name} Logo" style="width:100%; aspect-ratio:16/10; object-fit:cover; border-radius:8px; margin-bottom:12px;">` : ''}
+      <span class="tag">${s.status === 'live' ? 'AKTUELL' : 'ARCHIV'}</span>
+      <h3 style="color: ${s.color || 'var(--text)'};">${s.name}</h3>
+      <p>${s.description ? s.description.slice(0, 90) + (s.description.length > 90 ? '…' : '') : ''}</p>
+    </a>
+  `).join('');
+});
+</script>
+
+<script>
+// Netlify Identity: Login-Button + zuverlässige Erkennung von Einladungs-/Reset-/Bestätigungs-Links
+document.getElementById('admin-login-link').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (window.netlifyIdentity) netlifyIdentity.open();
+});
+
+const startHash = window.location.hash;
+const hadAuthToken = startHash.includes('invite_token') || startHash.includes('recovery_token') || startHash.includes('confirmation_token');
+
+if (window.netlifyIdentity) {
+  netlifyIdentity.on('init', user => {
+    if (hadAuthToken) {
+      netlifyIdentity.open(startHash.includes('recovery_token') ? 'login' : 'signup');
+    }
+  });
+  // Kein automatischer Redirect mehr nach Login — das führte zu ungewolltem
+  // Weiterleiten bei jedem Besuch mit bestehender Sitzung. Ihr geht nach dem
+  // Einloggen einfach manuell auf /admin/.
+}
+</script>
+
+</body>
+</html>
