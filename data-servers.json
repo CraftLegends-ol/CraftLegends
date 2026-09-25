@@ -8,7 +8,9 @@
       "logo": "logo-craftlegends-4.png",
       "name": "CraftLegends 4",
       "stats_url": "/img/stats-craftlegends-4.html",
-      "gallery": [],
+      "gallery": [
+        "/img/2026-09-13_20.29.59.png"
+      ],
       "status": "live",
       "world_download": "",
       "version": "1.21.11",
