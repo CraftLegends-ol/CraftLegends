@@ -9,9 +9,8 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
 <nav class="nav">
-  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.png" alt="CraftLegends">CraftLegends</a>
   <div class="nav-links">
     <a href="index.html#server">Server</a>
     <a href="mitglieder.html">Mitglieder</a>
@@ -22,86 +21,55 @@
 </nav>
 
 <div class="hero hero-small" id="server-hero">Lädt…</div>
-
+<div class="wrap" id="banner-wrap" style="display:none;"><div class="discontinued-banner" id="banner"></div></div>
 <section>
   <h2>📸 Bilder</h2>
-  <div class="gallery" id="server-gallery"></div>
-  <div class="action-row" id="server-actions"></div>
+  <div class="gallery" id="gallery"></div>
+  <div class="action-row" id="actions"></div>
 </section>
 
 <dialog id="ip-dialog" class="ip-dialog">
-  <button class="dialog-close" onclick="document.getElementById('ip-dialog').close()">✕</button>
+  <button class="dlg-x" onclick="this.closest('dialog').close()">✕</button>
   <div class="ip-dialog-content">
-    <div class="ip-label">Server-IP</div>
-    <div class="ip-big" id="ip-value"></div>
-    <div class="ip-label">Version</div>
-    <div class="version-big" id="version-value"></div>
-    <p class="ip-note" id="ip-note-value"></p>
+    <div class="ip-label">Server-IP</div><div class="ip-big" id="ip-value"></div>
+    <div class="ip-label">Version</div><div class="version-big" id="version-value"></div>
+    <p class="ip-note" id="ip-note"></p>
   </div>
 </dialog>
-
-<footer id="server-footer">CraftLegends</footer>
+<dialog id="info-dialog" class="ip-dialog">
+  <button class="dlg-x" onclick="this.closest('dialog').close()">✕</button>
+  <div class="ip-dialog-content" style="text-align:left;"><p id="info-text" style="line-height:1.7;margin:0;"></p></div>
+</dialog>
+<footer id="foot">CraftLegends</footer>
 
 <script>
-const params = new URLSearchParams(window.location.search);
-const id = params.get('id');
-
-fetch('data-servers.json').then(r => r.json()).then(data => {
-  const servers = data.servers || data;
-  const s = servers.find(sv => sv.id === id);
-  if (!s) {
-    document.getElementById('server-hero').innerHTML = '<h1>Server nicht gefunden</h1><p class="lead">Bitte über die <a href="index.html">Startseite</a> einen Server auswählen.</p>';
-    return;
-  }
-  document.title = s.name + ' — CraftLegends';
-  document.getElementById('server-footer').textContent = s.name;
-
-  const statusLabel = s.status === 'live' ? 'LIVE' : 'ARCHIV';
-  const statusCls = s.status === 'live' ? 'status-live' : 'status-archived';
-
-  document.getElementById('server-hero').innerHTML = `
-    ${s.logo ? `<img class="server-logo" src="${s.logo}" alt="${s.name} Logo">` : ''}
-    <div class="server-hero">
-      <h1 style="color: ${s.color || 'var(--emerald)'};">${s.name.toUpperCase()}</h1>
-      <span class="status-badge ${statusCls}">${statusLabel}</span>
-    </div>
-    <p class="server-desc">${s.description || ''}</p>
-  `;
-
-  const gallery = document.getElementById('server-gallery');
-  if (s.gallery && s.gallery.length) {
-    gallery.innerHTML = s.gallery.map(img => `<img src="${img}" alt="${s.name} Bild">`).join('');
-  } else {
-    gallery.innerHTML = '<div class="placeholder">Bild folgt</div><div class="placeholder">Bild folgt</div><div class="placeholder">Bild folgt</div>';
-  }
-
-  const statsBtn = s.stats_url
-    ? `<a class="action-btn" href="${s.stats_url}">📊 Server Stats</a>`
-    : `<span class="action-btn disabled">📊 Server Stats (nicht verfügbar)</span>`;
-
-  // World Download nur anzeigen, wenn der Server nicht mehr laeuft
-  let worldBtn = '';
-  if (s.status !== 'live') {
-    worldBtn = s.world_download
-      ? `<a class="action-btn" href="${s.world_download}" download>🌍 World Download</a>`
-      : `<span class="action-btn disabled">🌍 World Download (folgt)</span>`;
-  }
-
-  document.getElementById('server-actions').innerHTML = `
-    <button class="action-btn" id="ip-btn" style="font: inherit; cursor:pointer;">🌐 Server IP / Version</button>
-    ${statsBtn}
-    ${worldBtn}
-  `;
-  document.getElementById('ip-btn').addEventListener('click', () => {
-    document.getElementById('ip-value').textContent = s.ip || 'noch keine IP hinterlegt';
-    document.getElementById('version-value').textContent = s.version || 'unbekannt';
-    const noteEl = document.getElementById('ip-note-value');
-    noteEl.textContent = s.ip_note || '';
-    noteEl.style.display = s.ip_note ? 'block' : 'none';
-    document.getElementById('ip-dialog').showModal();
-  });
+const id=new URLSearchParams(location.search).get('id');
+fetch('data-servers.json').then(r=>r.json()).then(data=>{
+  const s=(data.servers||data).find(x=>x.id===id);
+  if(!s){document.getElementById('server-hero').innerHTML='<h1>Server nicht gefunden</h1><p class="lead">Bitte über die <a href="index.html">Startseite</a> einen Server auswählen.</p>';return;}
+  document.title=s.name+' — CraftLegends'; document.getElementById('foot').textContent=s.name;
+  const live=s.status==='live';
+  document.getElementById('server-hero').innerHTML=`
+    ${s.logo?`<img class="server-logo" src="${s.logo}" alt="${s.name}">`:''}
+    <div class="server-hero"><h1 style="color:${s.color||'var(--emerald)'};">${s.name.toUpperCase()}</h1>
+    <span class="status-badge ${live?'status-live':'status-archived'}">${live?'LIVE':'ARCHIV'}</span></div>
+    <p class="server-desc">${s.description||''}</p>`;
+  if(s.discontinued_note){document.getElementById('banner-wrap').style.display='block';document.getElementById('banner').textContent='⚠️ '+s.discontinued_note;}
+  const g=document.getElementById('gallery');
+  g.innerHTML=(s.gallery&&s.gallery.length)?s.gallery.map(i=>`<img src="${i}" alt="${s.name}">`).join(''):'<div class="placeholder">Bild folgt</div><div class="placeholder">Bild folgt</div><div class="placeholder">Bild folgt</div>';
+  const stats=s.stats_url?`<a class="action-btn" href="${s.stats_url}">📊 Server Stats</a>`:`<button class="action-btn" id="nostats">📊 Server Stats</button>`;
+  let world='';
+  if(!live){world=s.world_download?`<a class="action-btn" href="${s.world_download}" target="_blank" rel="noopener">🌍 World Download</a>`:`<button class="action-btn" id="noworld">🌍 World Download</button>`;}
+  document.getElementById('actions').innerHTML=`<button class="action-btn" id="ipbtn">🌐 Server IP / Version</button>${stats}${world}`;
+  const info=t=>{document.getElementById('info-text').textContent=t;document.getElementById('info-dialog').showModal();};
+  document.getElementById('ipbtn').onclick=()=>{
+    document.getElementById('ip-value').textContent=s.ip||'noch keine IP hinterlegt';
+    document.getElementById('version-value').textContent=s.version||'unbekannt';
+    const n=document.getElementById('ip-note');n.textContent=s.ip_note||'';n.style.display=s.ip_note?'block':'none';
+    document.getElementById('ip-dialog').showModal();};
+  const ns=document.getElementById('nostats'); if(ns)ns.onclick=()=>info(s.no_stats_note||'Für diesen Server sind aktuell keine Statistiken verfügbar.');
+  const nw=document.getElementById('noworld'); if(nw)nw.onclick=()=>info(s.discontinued_note||'Für diesen Server steht aktuell kein World-Download bereit.');
 });
 </script>
-
 </body>
 </html>

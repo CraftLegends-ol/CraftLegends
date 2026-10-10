@@ -10,7 +10,7 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.png" alt="CraftLegends">CraftLegends</a>
   <div class="nav-links">
     <a href="index.html#server">Server</a>
     <a href="mitglieder.html">Mitglieder</a>
@@ -20,22 +20,23 @@
   </div>
 </nav>
 
-<div class="hero hero-small">
-  <h1 id="regeln-title">REGELN</h1>
-  <p class="lead" id="regeln-intro">Lädt…</p>
-</div>
-
-<section>
-  <ol class="rules-list" id="rules-list"></ol>
-</section>
-
+<div class="hero hero-small"><p class="lead" id="intro" style="display:none;"></p></div>
+<section><div class="rules-text" id="rules">Lädt…</div></section>
 <footer>CraftLegends</footer>
-
 <script>
-fetch('data-regeln.json').then(r => r.json()).then(data => {
-  document.getElementById('regeln-title').textContent = data.title.toUpperCase();
-  document.getElementById('regeln-intro').textContent = data.intro || '';
-  document.getElementById('rules-list').innerHTML = (data.rules || []).map(r => `<li>${r}</li>`).join('');
+const esc=s=>s.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+fetch('data-regeln.json').then(r=>r.json()).then(d=>{
+  if(d.intro){const i=document.getElementById('intro');i.textContent=d.intro;i.style.display='block';}
+  const html=(d.content||'').split(/\n\s*\n/).map(b=>{
+    const t=b.trim(); if(!t)return '';
+    if(t.startsWith('§')){const i=t.indexOf('\n');const title=i<0?t:t.slice(0,i);const rest=i<0?'':t.slice(i+1).trim();
+      return `<div class="rule-item"><h3>${esc(title)}</h3>${rest?`<p>${esc(rest)}</p>`:''}</div>`;}
+    if(!t.includes('\n')&&t.length<=45)return `<h2 class="rules-heading">${esc(t)}</h2>`;
+    const lines=t.split('\n');
+    if(lines.length>1&&lines[0].length<=45&&!/[.!:]$/.test(lines[0]))return `<h2 class="rules-heading">${esc(lines[0])}</h2><p class="rules-p">${esc(lines.slice(1).join('\n')).replace(/\n/g,'<br>')}</p>`;
+    return `<p class="rules-p">${esc(t).replace(/\n/g,'<br>')}</p>`;
+  }).join('');
+  document.getElementById('rules').innerHTML=html;
 });
 </script>
 </body>

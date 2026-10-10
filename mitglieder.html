@@ -10,7 +10,7 @@
 </head>
 <body>
 <nav class="nav">
-  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.svg" alt="CraftLegends Logo" style="height:28px; vertical-align:middle; margin-right:8px;">CraftLegends</a>
+  <a href="index.html" class="nav-brand"><img src="logo-craftlegends-main.png" alt="CraftLegends">CraftLegends</a>
   <div class="nav-links">
     <a href="index.html#server">Server</a>
     <a href="mitglieder.html" class="active">Mitglieder</a>
@@ -22,67 +22,97 @@
 
 <div class="hero hero-small">
   <h1>MITGLIEDER</h1>
-  <p class="lead">Alle Spieler von CraftLegends auf einen Blick — mit Rolle und Team-Zugehörigkeit.</p>
+  <p class="lead">Alle Spieler von CraftLegends – klick auf einen Spieler für seine Stats und Fortschritte, zusammengerechnet über alle Server.</p>
 </div>
-
 <section id="members-sections">Lädt…</section>
 
+<dialog id="pdlg" class="dlg-big">
+  <div class="dlg-head"><h3 id="pname"></h3><button class="dlg-x" onclick="pdlg.close()">✕</button></div>
+  <div class="tabs"><button class="tab on" data-t="stats">📊 Statistiken</button><button class="tab" data-t="adv">🏆 Fortschritte</button></div>
+  <div class="dlg-body" id="pbody"></div>
+</dialog>
 <footer>CraftLegends</footer>
 
 <script>
-function headImg(m) {
-  return `<img class="member-head" src="https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96" alt="${m.name}" loading="lazy"
-    onerror="this.onerror=function(){this.src='https://crafatar.com/avatars/${m.uuid}?size=96&overlay'}; this.src='https://minotar.net/avatar/${encodeURIComponent(m.name)}/96'">`;
+const pdlg=document.getElementById('pdlg');
+let MEM=null, COMB=null, CUR=null;
+const fmt=n=>Math.round(n).toLocaleString('de-DE');
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+function headImg(m){
+  return `<img class="member-head" src="https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96" alt="${esc(m.name)}" loading="lazy"
+    onerror="this.onerror=function(){this.src='https://crafatar.com/avatars/${m.uuid}?size=96&overlay'};this.src='https://minotar.net/avatar/${encodeURIComponent(m.name)}/96'">`;
 }
-
-function memberCard(m, data) {
-  const roleCls = m.role === 'Admin' ? 'role-admin' : m.role === 'Developer' ? 'role-dev' : m.role === 'Operator' ? 'role-op' : 'role-member';
-  const team = data.teams[m.team];
-  const teamBadge = team
-    ? `<span class="team-badge" style="color:${team.color}; background:${team.bg || team.color + '22'}; border-color:${team.color}55">${team.label}</span>`
-    : `<span class="team-badge team-none">MBR</span>`;
-  return `
-    <div class="member-card">
-      ${headImg(m)}
-      <div class="member-name">${m.name}</div>
-      <div class="member-badges">
-        <span class="role-badge ${roleCls}">${m.role}</span>
-        ${teamBadge}
-      </div>
-    </div>`;
+function card(m){
+  const roleCls=m.role==='Admin'?'role-admin':m.role==='Developer'?'role-dev':m.role==='Operator'?'role-op':'role-member';
+  const team=MEM.teams[m.team];
+  const tb=team?`<span class="team-badge" style="color:${team.color};background:${team.bg||team.color+'22'};border-color:${team.color}55">${team.label}</span>`:`<span class="team-badge team-none">MBR</span>`;
+  const has=COMB.players[m.name];
+  const inner=`${headImg(m)}<div class="member-name">${esc(m.name)}</div><div class="member-badges"><span class="role-badge ${roleCls}">${m.role}</span>${tb}</div>
+    <div class="member-hint">${has?'Stats ansehen':'noch keine Daten'}</div>`;
+  return has?`<button class="member-card" data-n="${esc(m.name)}">${inner}</button>`:`<div class="member-card nodata">${inner}</div>`;
 }
+function ring(p,size=72,st=8){
+  const r=(size-st)/2,c=2*Math.PI*r,off=c*(1-p/100),col=p>=75?'var(--emerald)':p>=40?'var(--gold)':'var(--redstone)';
+  return `<span class="ringwrap"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="var(--card-border)" stroke-width="${st}"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${st}" stroke-linecap="round" stroke-dasharray="${c.toFixed(2)}" stroke-dashoffset="${off.toFixed(2)}" transform="rotate(-90 ${size/2} ${size/2})"/></svg><span class="rlabel">${p}%</span></span>`;
+}
+const kv=rows=>'<ul class="kv">'+rows.map(([l,v])=>`<li><span>${esc(l)}</span><b>${v}</b></li>`).join('')+'</ul>';
+const pill=(i,l,v)=>`<div class="pill"><span>${i}</span><b>${v}</b><span class="d">${l}</span></div>`;
 
-fetch('data-members.json').then(r => r.json()).then(data => {
-  const admins = data.members.filter(m => m.role === 'Admin');
-  const devs = data.members.filter(m => m.role === 'Developer');
-  const rest = data.members.filter(m => m.role !== 'Admin' && m.role !== 'Developer');
-
-  const teamOrder = Object.keys(data.teams);
-  const restByTeam = teamOrder.map(tid => ({
-    team: data.teams[tid],
-    members: rest.filter(m => m.team === tid)
-  })).filter(g => g.members.length);
-  const noTeam = rest.filter(m => !m.team || !data.teams[m.team]);
-
-  let html = '';
-  if (admins.length) {
-    html += `<div class="member-group"><h2>👑 Admins</h2><div class="members-grid">${admins.map(m => memberCard(m, data)).join('')}</div></div>`;
+function showStats(n){
+  const r=COMB.players[n];
+  const per=Object.entries(r.per_server).filter(([,v])=>v).map(([s,v])=>`${s}: ${v.play_hours} h · ${fmt(v.blocks_mined)} abgebaut`).join(' &nbsp;|&nbsp; ');
+  let h=`<p class="srv-line">Zusammengerechnet aus: ${r.servers.join(' + ')}</p><p class="srv-line">${per}</p><div class="pills">`+
+    pill('⏱️','Spielzeit',r.play_hours+' h')+pill('⛏️','Abgebaut',fmt(r.blocks_mined))+pill('🧱','Platziert',fmt(r.blocks_placed))+
+    pill('💀','Tode',fmt(r.deaths))+pill('⚔️','Spieler-Kills',fmt(r.player_kills))+pill('👹','Mobs',fmt(r.mob_kills_total))+
+    pill('🤝','Handel',fmt(r.trades))+pill('🍗','Essen',fmt(r.total_food))+pill('🪬','Totems',fmt(r.totems))+
+    pill('🚶','Strecke',fmt(r.total_distance_blocks)+' Blöcke')+pill('⭐','Höchstes Level',r.level)+`</div><div class="cols">`;
+  const mv=Object.entries(r.movement_blocks).sort((a,b)=>b[1]-a[1]).map(([k,v])=>[k,fmt(v)]);
+  if(mv.length)h+=`<div><h4>🚶 Strecke</h4>${kv(mv)}</div>`;
+  const tl=Object.entries(r.tool_usage).map(([k,v])=>[k,fmt(v)]);
+  if(tl.length)h+=`<div><h4>🛠️ Werkzeuge &amp; Waffen</h4>${kv(tl)}</div>`;
+  const fd=Object.entries(r.food_eaten).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,v])=>[k,fmt(v)]);
+  if(fd.length)h+=`<div><h4>🍗 Essen (Top 10)</h4>${kv(fd)}</div>`;
+  const mb=Object.entries(r.mob_kills_breakdown).sort((a,b)=>b[1]-a[1]).slice(0,10).map(([k,v])=>[k,fmt(v)]);
+  if(mb.length)h+=`<div><h4>👹 Getötete Mobs (Top 10)</h4>${kv(mb)}</div>`;
+  document.getElementById('pbody').innerHTML=h+'</div>';
+}
+function showAdv(n){
+  const r=COMB.players[n], done=new Set(r.achievements_done);
+  let h=`<div class="ring-row">${ring(r.achievements_pct)}<div><b>${r.achievements_count} von ${r.achievements_total}</b> Fortschritten<br><span class="srv-line">über alle Server zusammengerechnet</span></div></div>`;
+  for(const cat of Object.keys(COMB.category_labels)){
+    const items=COMB.master.filter(m=>m.category===cat); if(!items.length)continue;
+    const got=items.filter(m=>done.has(m.id)).length;
+    h+=`<div class="grp"><h4>${COMB.category_icons[cat]} ${COMB.category_labels[cat]}<span>${got}/${items.length}</span></h4><ul class="al">`+
+      items.map(m=>`<li class="${done.has(m.id)?'':'no'}"><span>${done.has(m.id)?'✅':'🔒'}</span><span>${m.title}</span></li>`).join('')+'</ul></div>';
   }
-  if (devs.length) {
-    html += `<div class="member-group"><h2>🛠️ Developer</h2><div class="members-grid">${devs.map(m => memberCard(m, data)).join('')}</div></div>`;
-  }
-  if (rest.length) {
-    html += `<div class="member-group"><h2>👥 Member</h2>`;
-    restByTeam.forEach(g => {
-      html += `<h3 class="team-subheading" style="color:${g.team.color === '#1a1a1a' ? 'var(--text)' : g.team.color}">${g.team.label} Team</h3><div class="members-grid">${g.members.map(m => memberCard(m, data)).join('')}</div>`;
-    });
-    if (noTeam.length) {
-      html += `<h3 class="team-subheading">Ohne Team</h3><div class="members-grid">${noTeam.map(m => memberCard(m, data)).join('')}</div>`;
-    }
-    html += `</div>`;
-  }
+  document.getElementById('pbody').innerHTML=h;
+}
+function open_(n,tab){
+  CUR=n; document.getElementById('pname').textContent=n;
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('on',t.dataset.t===tab));
+  tab==='adv'?showAdv(n):showStats(n);
+  if(!pdlg.open)pdlg.showModal();
+}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>open_(CUR,t.dataset.t)));
 
-  document.getElementById('members-sections').innerHTML = html;
+Promise.all([fetch('data-members.json').then(r=>r.json()),fetch('data-combined.json').then(r=>r.json())]).then(([mem,comb])=>{
+  MEM=mem; COMB=comb;
+  const grid=ms=>`<div class="members-grid">${ms.map(card).join('')}</div>`;
+  const admins=mem.members.filter(m=>m.role==='Admin'), devs=mem.members.filter(m=>m.role==='Developer');
+  const rest=mem.members.filter(m=>m.role!=='Admin'&&m.role!=='Developer');
+  let h='';
+  if(admins.length)h+=`<div class="member-group"><h2>👑 Admins</h2>${grid(admins)}</div>`;
+  if(devs.length)h+=`<div class="member-group"><h2>🛠️ Developer</h2>${grid(devs)}</div>`;
+  if(rest.length){
+    h+='<div class="member-group"><h2>👥 Member</h2>';
+    Object.keys(mem.teams).forEach(tid=>{const g=rest.filter(m=>m.team===tid); if(!g.length)return;
+      const t=mem.teams[tid]; h+=`<h3 class="team-subheading" style="color:${t.color==='#1a1a1a'?'var(--text)':t.color}">${t.label} Team</h3>${grid(g)}`;});
+    const nt=rest.filter(m=>!m.team||!mem.teams[m.team]); if(nt.length)h+=`<h3 class="team-subheading">Ohne Team</h3>${grid(nt)}`;
+    h+='</div>';
+  }
+  const root=document.getElementById('members-sections'); root.innerHTML=h;
+  root.querySelectorAll('button.member-card').forEach(b=>b.addEventListener('click',()=>open_(b.dataset.n,'stats')));
 });
 </script>
 </body>
