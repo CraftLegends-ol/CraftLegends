@@ -41,8 +41,10 @@ collections:
               - { label: "Server-IP", name: "ip", widget: "string", required: false }
               - { label: "Version", name: "version", widget: "string", required: false }
               - { label: "Hinweis zur IP (optional)", name: "ip_note", widget: "string", required: false }
-              - { label: "Link zur Statistik-Seite (optional)", name: "stats_url", widget: "file", required: false, hint: "Stats-HTML-Datei per Drag & Drop reinziehen" }
-              - { label: "World Download (optional)", name: "world_download", widget: "file", required: false, hint: "Welt-ZIP per Drag & Drop reinziehen. Nur fuer Server, die nicht mehr laufen." }
+              - { label: "Statistik-Seite (HTML-Datei)", name: "stats_url", widget: "file", required: false, hint: "Stats-HTML-Datei per Drag & Drop reinziehen. Leer lassen, wenn es keine Stats gibt." }
+              - { label: "World Download – externer Link (optional)", name: "world_download", widget: "string", required: false, hint: "Weltdateien sind zu groß fürs Admin-Panel (GitHub erlaubt keine Dateien über 100 MB). ZIP z.B. bei Google Drive oder MEGA hochladen, Freigabe auf 'Jeder mit Link' stellen und den Link hier einfügen. Wird nur bei Servern mit Status 'archiv' angezeigt." }
+              - { label: "Hinweis, warum der Server nicht mehr spielbar ist (optional)", name: "discontinued_note", widget: "text", required: false, hint: "Wird als rotes Banner auf der Serverseite angezeigt, z.B. wenn Weltdateien gelöscht wurden." }
+              - { label: "Text beim Klick auf 'Server Stats', falls keine Stats vorhanden (optional)", name: "no_stats_note", widget: "text", required: false }
               - label: "Bildergalerie"
                 name: "gallery"
                 widget: "list"
@@ -61,7 +63,7 @@ collections:
             widget: "list"
             summary: "{{fields.name}} ({{fields.role}})"
             fields:
-              - { label: "Name (Minecraft-Name)", name: "name", widget: "string" }
+              - { label: "Name (aktueller Minecraft-Name)", name: "name", widget: "string" }
               - { label: "Minecraft-UUID", name: "uuid", widget: "string" }
               - label: "Rolle"
                 name: "role"
@@ -77,10 +79,8 @@ collections:
         name: "regeln"
         fields:
           - { label: "Titel", name: "title", widget: "string" }
-          - { label: "Einleitungstext", name: "intro", widget: "text", required: false }
-          - label: "Regeln"
-            name: "rules"
-            widget: "list"
+          - { label: "Einleitungstext (optional)", name: "intro", widget: "text", required: false }
+          - { label: "Regeltext (wird 1:1 so angezeigt)", name: "content", widget: "text", hint: "Absätze mit einer Leerzeile trennen. Zeilen mit § werden als Regel-Karte dargestellt, kurze Zeilen mit Emoji als Überschrift." }
 
   - name: "ankuendigungen"
     label: "Ankündigungen"
