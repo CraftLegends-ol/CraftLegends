@@ -68,7 +68,12 @@ collections:
               - label: "Rolle"
                 name: "role"
                 widget: "select"
-                options: ["Admin", "Developer", "Operator", "Member"]
+                options: ["Admin", "Moderator", "Developer", "Operator", "Member"]
+              - label: "Zusatzrolle (optional)"
+                name: "extra_role"
+                widget: "select"
+                options: ["Admin", "Moderator", "Developer", "Operator"]
+                required: false
               - { label: "Team-Kürzel (leer lassen wenn kein Team)", name: "team", widget: "string", required: false }
 
   - name: "regeln"
