@@ -45,11 +45,7 @@ collections:
               - { label: "World Download – externer Link (optional)", name: "world_download", widget: "string", required: false, hint: "Weltdateien sind zu groß fürs Admin-Panel (GitHub erlaubt keine Dateien über 100 MB). ZIP z.B. bei Google Drive oder MEGA hochladen, Freigabe auf 'Jeder mit Link' stellen und den Link hier einfügen. Wird nur bei Servern mit Status 'archiv' angezeigt." }
               - { label: "Hinweis, warum der Server nicht mehr spielbar ist (optional)", name: "discontinued_note", widget: "text", required: false, hint: "Wird als rotes Banner auf der Serverseite angezeigt, z.B. wenn Weltdateien gelöscht wurden." }
               - { label: "Text beim Klick auf 'Server Stats', falls keine Stats vorhanden (optional)", name: "no_stats_note", widget: "text", required: false }
-              - label: "Bildergalerie"
-                name: "gallery"
-                widget: "list"
-                field: { label: "Bild", name: "image", widget: "image" }
-                required: false
+              - { label: "Bildergalerie", name: "gallery", widget: "image", allow_multiple: true, required: false, hint: "Mehrere Bilder auf einmal: Dateien ins Upload-Fenster ziehen oder im Auswahlfenster mehrere markieren (Strg gedrückt halten) und bestätigen. Die Reihenfolge entspricht der Reihenfolge auf der Seite." }
 
   - name: "members"
     label: "Mitglieder"
@@ -75,6 +71,8 @@ collections:
                 options: ["Admin", "Moderator", "Developer", "Operator"]
                 required: false
               - { label: "Team-Kürzel (leer lassen wenn kein Team)", name: "team", widget: "string", required: false }
+              - { label: "Skin-Quelle überschreiben (optional)", name: "skin", widget: "string", required: false, hint: "Minecraft-Name, UUID oder direkter Bild-Link, von dem der Kopf geladen werden soll. Leer = UUID dieses Eintrags." }
+              - { label: "Eigenes Kopf-Bild (optional)", name: "skin_image", widget: "image", allow_multiple: false, required: false, hint: "Wenn gesetzt, wird dieses Bild statt eines Skins angezeigt (z.B. bei Spielern ohne echten Skin)." }
 
   - name: "regeln"
     label: "Regeln"
