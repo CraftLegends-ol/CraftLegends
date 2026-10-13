@@ -193,6 +193,12 @@
       "uuid": "2f23b561-dd58-4968-9d66-7ddc1fc7e97c",
       "role": "Member",
       "team": "schwarz"
+    },
+    {
+      "uuid": "5748aa2a-c58d-4377-a66c-b31b8255d3ca",
+      "name": "Drachenblitz1",
+      "role": "Member",
+      "team": "schwarz"
     }
   ]
 }
