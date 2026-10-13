@@ -28,9 +28,9 @@
       "color": "#e0609a",
       "members": [
         "Capacraft",
-        "N0tErik",
+        "_NotErik",
         "NotThaddl",
-        "LaulauGHG",
+        "_NotLau",
         "Malte4573"
       ]
     },
@@ -109,7 +109,7 @@
       "team": "NAT"
     },
     {
-      "name": "N0tErik",
+      "name": "_NotErik",
       "uuid": "e7208f74-48d0-4432-895d-bd5984de947a",
       "role": "Member",
       "team": "TCG"
@@ -157,7 +157,7 @@
       "team": "NAT"
     },
     {
-      "name": "LaulauGHG",
+      "name": "_NotLau",
       "uuid": "37af2dc5-66c3-4579-9ef3-5ff9a4d7779e",
       "role": "Member",
       "team": "TCG"
@@ -166,13 +166,15 @@
       "name": "Xjoke_mc",
       "uuid": "594ea281-7573-4f62-a0cd-24909b7affd0",
       "role": "Member",
-      "team": ""
+      "team": "",
+      "skin": "Xjoke_mc"
     },
     {
       "name": "The_Tococo",
       "uuid": "ef617a95-0e00-4960-a273-fee50ebba219",
       "role": "Member",
-      "team": "Toc"
+      "team": "Toc",
+      "skin": "The_Tococo"
     },
     {
       "name": "crintonyt",
