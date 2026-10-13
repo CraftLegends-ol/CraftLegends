@@ -86,8 +86,9 @@
     {
       "name": "Enderblitz1",
       "uuid": "f46208cd-f5ba-4b42-bf40-0b0f63f30471",
-      "role": "Developer",
-      "team": "schwarz"
+      "role": "Moderator",
+      "team": "schwarz",
+      "extra_role": "Developer"
     },
     {
       "name": "DinoZuHause",
@@ -182,7 +183,7 @@
     {
       "name": "NotThaddl",
       "uuid": "077c0ca6-d9f1-4e5f-a66f-8e89c8174be4",
-      "role": "Member",
+      "role": "Moderator",
       "team": "TCG"
     },
     {

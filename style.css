@@ -37,6 +37,7 @@ button.member-card{cursor:pointer;transition:border-color .15s}button.member-car
 .role-badge,.team-badge{font-size:11px;font-family:var(--font-mono);padding:2px 8px;border-radius:999px;border:1px solid transparent}
 .role-admin{color:var(--redstone);background:rgba(224,90,78,.12);border-color:rgba(224,90,78,.4)}
 .role-op{color:var(--gold);background:rgba(227,178,60,.12);border-color:rgba(227,178,60,.4)}
+.role-mod{color:#b9a4ff;background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.4)}
 .role-dev{color:var(--diamond);background:rgba(82,214,201,.12);border-color:rgba(82,214,201,.4)}
 .role-member{color:var(--text-dim);background:var(--bg-alt);border-color:var(--card-border)}
 .team-none{color:var(--text);background:var(--bg-alt);border-color:var(--card-border)}

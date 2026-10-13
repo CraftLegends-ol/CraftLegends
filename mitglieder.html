@@ -43,12 +43,15 @@ function headImg(m){
   return `<img class="member-head" src="https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96" alt="${esc(m.name)}" loading="lazy"
     onerror="this.onerror=function(){this.src='https://crafatar.com/avatars/${m.uuid}?size=96&overlay'};this.src='https://minotar.net/avatar/${encodeURIComponent(m.name)}/96'">`;
 }
+const ROLE_CLS={Admin:'role-admin',Moderator:'role-mod',Developer:'role-dev',Operator:'role-op',Member:'role-member'};
+function roleBadges(m){
+  return [m.role,m.extra_role].filter(Boolean).map(r=>`<span class="role-badge ${ROLE_CLS[r]||'role-member'}">${esc(r)}</span>`).join('');
+}
 function card(m){
-  const roleCls=m.role==='Admin'?'role-admin':m.role==='Developer'?'role-dev':m.role==='Operator'?'role-op':'role-member';
   const team=MEM.teams[m.team];
   const tb=team?`<span class="team-badge" style="color:${team.color};background:${team.bg||team.color+'22'};border-color:${team.color}55">${team.label}</span>`:`<span class="team-badge team-none">MBR</span>`;
   const has=COMB.players[m.name];
-  const inner=`${headImg(m)}<div class="member-name">${esc(m.name)}</div><div class="member-badges"><span class="role-badge ${roleCls}">${m.role}</span>${tb}</div>
+  const inner=`${headImg(m)}<div class="member-name">${esc(m.name)}</div><div class="member-badges">${roleBadges(m)}${tb}</div>
     <div class="member-hint">${has?'Stats ansehen':'noch keine Daten'}</div>`;
   return has?`<button class="member-card" data-n="${esc(m.name)}">${inner}</button>`:`<div class="member-card nodata">${inner}</div>`;
 }
@@ -99,11 +102,13 @@ document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>open
 Promise.all([fetch('data-members.json').then(r=>r.json()),fetch('data-combined.json').then(r=>r.json())]).then(([mem,comb])=>{
   MEM=mem; COMB=comb;
   const grid=ms=>`<div class="members-grid">${ms.map(card).join('')}</div>`;
-  const admins=mem.members.filter(m=>m.role==='Admin'), devs=mem.members.filter(m=>m.role==='Developer');
-  const rest=mem.members.filter(m=>m.role!=='Admin'&&m.role!=='Developer');
+  const MG=['Admin','Moderator','Developer'];
+  const isMg=m=>MG.includes(m.role)||MG.includes(m.extra_role);
+  const rank=m=>Math.min(...[m.role,m.extra_role].filter(r=>MG.includes(r)).map(r=>MG.indexOf(r)));
+  const mgmt=mem.members.filter(isMg).sort((x,y)=>rank(x)-rank(y));
+  const rest=mem.members.filter(m=>!isMg(m));
   let h='';
-  if(admins.length)h+=`<div class="member-group"><h2>👑 Admins</h2>${grid(admins)}</div>`;
-  if(devs.length)h+=`<div class="member-group"><h2>🛠️ Developer</h2>${grid(devs)}</div>`;
+  if(mgmt.length)h+=`<div class="member-group"><h2>🛡️ Management</h2>${grid(mgmt)}</div>`;
   if(rest.length){
     h+='<div class="member-group"><h2>👥 Member</h2>';
     Object.keys(mem.teams).forEach(tid=>{const g=rest.filter(m=>m.team===tid); if(!g.length)return;
