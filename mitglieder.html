@@ -39,9 +39,32 @@ let MEM=null, COMB=null, CUR=null;
 const fmt=n=>Math.round(n).toLocaleString('de-DE');
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+/* Skins immer über die UUID laden (bleibt auch nach einer Namensänderung gleich).
+   Falls ein Dienst nicht antwortet, wird automatisch der nächste probiert. */
+function skinSources(m){
+  const key=(m.skin||'').trim();
+  if(m.skin_image)return [m.skin_image];                 // eigenes Kopf-Bild hat Vorrang
+  if(/^https?:\/\//i.test(key))return [key];             // direkter Bild-Link
+  const asUuid=k=>/^[0-9a-f]{32}$/i.test(k.replace(/-/g,''));
+  if(key&&!asUuid(key)){                                 // Name angegeben -> über den Namen laden
+    const n=encodeURIComponent(key);
+    return [`https://mc-heads.net/avatar/${n}/96`,`https://minotar.net/helm/${n}/96.png`];
+  }
+  const u=(key||m.uuid||'').replace(/-/g,'');            // sonst über die UUID (Standard)
+  return [
+    `https://mc-heads.net/avatar/${u}/96`,
+    `https://crafatar.com/avatars/${u}?size=96&overlay`,
+    `https://minotar.net/helm/${u}/96.png`,
+    `https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96`
+  ];
+}
+function skinNext(img){
+  const s=JSON.parse(img.dataset.srcs),i=(+img.dataset.i||0)+1;
+  if(i<s.length){img.dataset.i=i;img.src=s[i];}
+}
 function headImg(m){
-  return `<img class="member-head" src="https://mc-heads.net/avatar/${encodeURIComponent(m.name)}/96" alt="${esc(m.name)}" loading="lazy"
-    onerror="this.onerror=function(){this.src='https://crafatar.com/avatars/${m.uuid}?size=96&overlay'};this.src='https://minotar.net/avatar/${encodeURIComponent(m.name)}/96'">`;
+  const s=skinSources(m);
+  return `<img class="member-head" src="${s[0]}" data-srcs='${JSON.stringify(s)}' data-i="0" alt="${esc(m.name)}" loading="lazy" onerror="skinNext(this)">`;
 }
 const ROLE_CLS={Admin:'role-admin',Moderator:'role-mod',Developer:'role-dev',Operator:'role-op',Member:'role-member'};
 function roleBadges(m){
