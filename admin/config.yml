@@ -64,7 +64,7 @@ collections:
               - label: "Rolle"
                 name: "role"
                 widget: "select"
-                options: ["Admin", "Moderator", "Developer", "Operator", "Member"]
+                options: ["Admin", "Moderator", "Developer", "Operator", "Member", "Ehemalig"]
               - label: "Zusatzrolle (optional)"
                 name: "extra_role"
                 widget: "select"
@@ -101,3 +101,21 @@ collections:
               - { label: "Datum", name: "date", widget: "datetime", format: "YYYY-MM-DD", date_format: "YYYY-MM-DD", time_format: false }
               - { label: "Titel", name: "title", widget: "string" }
               - { label: "Text", name: "text", widget: "text" }
+
+  - name: "former"
+    label: "Ehemalige Spieler"
+    files:
+      - file: "data-former.json"
+        label: "Ehemalige Spieler (nur CL3)"
+        name: "former"
+        fields:
+          - label: "Spieler"
+            name: "members"
+            widget: "list"
+            summary: "{{fields.name}}"
+            fields:
+              - { label: "Minecraft-Name", name: "name", widget: "string" }
+              - { label: "Minecraft-UUID", name: "uuid", widget: "string" }
+              - { label: "Rolle", name: "role", widget: "string", default: "Ehemalig" }
+              - { label: "Team", name: "team", widget: "string", required: false }
+              - { label: "Hinweistext", name: "note", widget: "string", required: false }
